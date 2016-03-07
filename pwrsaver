@@ -1,0 +1,364 @@
+#!/bin/bash
+# Maciej Szeptuch (Neverous) (C) 2009-2014
+# Simple Power Management
+
+function help()
+{
+    echo "usage: $0 {start|stop|r [name] {start|stop}|hibernate|suspend} ";
+    echo -e "available functions:
+    * sound
+    * network { wifi }
+    * wifi
+    * sd
+    * bluetooth
+    * usb { bluetooth, security }
+    * firewire
+    * mouse
+    * filesystems
+    * extra
+    * security
+";
+    exit 0;
+}
+
+if [ $EUID -ne 0 ]
+then
+    echo "You must be root to do that!";
+    exit 1;
+fi
+
+if [ -z $1 ]
+then
+    help;
+fi
+
+if [ $1 == "-h" ]
+then
+    help;
+fi
+
+
+function modp()
+{
+    for module in $2; do
+        modprobe $1 $module;
+    done;
+    return 0;
+}
+
+function security()
+{
+    case "$1" in
+        "start")
+            modp -v "tpm_bios tpm_tis tpm";
+            /etc/rc.d/openct start;
+            /etc/rc.d/opencryptoki start;
+            /etc/rc.d/trousers start;
+            echo "Security is ON";;
+        "stop")
+            /etc/rc.d/openct stop;
+            /etc/rc.d/opencryptoki stop;
+            /etc/rc.d/trousers stop;
+            modp -vr "tpm_bios tpm_tis tpm";
+            echo "Security is OFF";;
+        *)
+            echo "Security switch";;
+    esac
+}
+
+function sound()
+{
+    case "$1" in
+        "start")
+            modp -v "snd_seq snd_seq_device snd_hda_intel snd_hda_codec_idt snd_hda_codec_intelhdmi snd_hda_codec_idt snd_hda_codec snd_hda_codec_hdmi snd_hwdep snd_pcm snd_timer snd_page_alloc snd soundcore";
+            /etc/rc.d/alsa-utils start;
+            alsactl restore;
+            echo "Sound is ON";;
+        "stop")
+            alsactl store;
+            /etc/rc.d/alsa-utils stop;
+            modp -vr "snd_seq snd_seq_device snd_hda_intel snd_hda_codec_idt snd_hda_codec_intelhdmi snd_hda_codec_idt snd_hda_codec snd_hda_codec_hdmi snd_hwdep snd_pcm snd_timer snd_page_alloc snd soundcore";
+            echo "Sound is OFF";;
+        *)
+            echo "Sound Switch";;
+    esac
+}
+
+function wifi()
+{
+    case "$1" in
+        "start")
+            modp -v "iwlcore iwlagn";
+            echo "Wifi is ON";;
+        "stop")
+            modp -vr "iwlagn iwlcore mac80211 cfg80211";
+            echo "Wifi is OFF";;
+        *)
+            echo "Wifi switch";;
+    esac
+}
+
+function lan()
+{
+    case "$1" in
+        "start")
+            modp -v "e1000e";
+            echo "LAN is ON";;
+        "stop")
+            modp -vr "e1000e";
+            echo "LAN is OFF";;
+        *)
+            echo "LAN switch";;
+    esac
+}
+
+function network()
+{
+    case "$1" in
+        "start")
+            /etc/rc.d/networking start;
+            /etc/rc.d/net-profiles start;
+            /etc/rc.d/samba start;
+            echo "Network programs are ON";;
+        "stop")
+            wifi stop;
+            lan stop;
+            /etc/rc.d/samba stop;
+            /etc/rc.d/net-profiles stop;
+            echo "Network programs are OFF";;
+        *)
+            echo "Network porgrams switch";;
+    esac
+}
+
+function sensors()
+{
+    case "$1" in
+        "start")
+            modp -v "i2c-i801 coretemp";
+            /etc/rc.d/lm-sensors start;
+            echo "Sensors are ON";;
+        "stop")
+            /etc/rc.d/lm-sensors stop;
+            modp -vr "i2c-i801 coretemp hwmon";
+            echo "Sensors are OFF";;
+        *)
+            echo "Sensors switch";;
+    esac
+}
+
+function bluetooth()
+{
+    case "$1" in
+        "start")
+            modp -v "btusb sco bnep rfcomm l2cap bluetooth hidp";
+            /etc/rc.d/bluetooth start;
+            echo "Bluetooth is ON";;
+        "stop")
+            /etc/rc.d/bluetooth stop;
+            modp -vr "btusb sco bnep rfcomm l2cap bluetooth hidp";
+            echo "Bluetooth is OFF";;
+        *)
+            echo "Bluetooth switch";;
+    esac
+}
+
+function sd()
+{
+    case "$1" in
+        "start")
+            modp -v "sdhci_pci sdhci mmc_core ricoh_mmc";
+            echo "SD is ON";;
+        "stop")
+            modp -vr "sdhci_pci sdhci mmc_core ricoh_mmc";
+            echo "SD is OFF";;
+        *)
+            echo "SD switch";;
+    esac
+}
+
+function usb()
+{
+    case "$1" in
+        "start")
+            modp -v "uhci_hcd ehci_hcd usb_storage";
+            echo "USB is ON";;
+        "stop")
+            bluetooth stop;
+            security stop;
+            modp -vr "usbhid usb_storage ehci_hcd uhci_hcd";
+            echo "USB is OFF";;
+        *)
+            echo "USB switch";;
+    esac
+}
+
+function firewire()
+{
+    case "$1" in
+        "start")
+            modp -v "firewire_ohci firewire_core";
+            echo "Firewire is ON";;
+        "stop")
+            modp -vr "firewire_ohci firewire_core";
+            echo "Firewire is OFF";;
+        *)
+            echo "Firewire switch";;
+    esac
+}
+
+function filesystems()
+{
+    case "$1" in
+        "start")
+            echo "Filesystems modules are automatically loaded when needed";;
+        "stop")
+            modp -vr "fuse msdos vfat fat xfs udf ufs squashfs reiserfs isofs ext2 ext3 cifs configfs";
+            echo "Filesystems modules UNLOADED";;
+        *)
+            echo "Filesystems modules switch";;
+    esac
+}
+
+function cdrom()
+{
+    case "$1" in
+        "start")
+            modp -v "sr_mod";
+            echo "CDROM is ON";;
+        "stop")
+            modp -vr "sr_mod";
+            echo "CDROM is OFF";;
+        *)
+            echo "Cdrom switch";;
+    esac
+}
+
+function mouse()
+{
+    case "$1" in
+        "start")
+            modp -v "psmouse";
+            echo "Mouse is ON";;
+        "stop")
+            modp -vr "psmouse";
+            echo "Mouse is OFF";;
+        *)
+            echo "Mouse switch";;
+    esac
+}
+
+function extra()
+{
+    case "$1" in
+        "start")
+            /etc/rc.d/dbus start;
+            /etc/rc.d/acpid start;
+            /etc/rc.d/cron start;
+            /etc/rc.d/udev start;
+            echo "Extra programs started";;
+        "stop")
+            echo "WARNING: this will kill all processes that it can. You should be in rich console now!";
+            /etc/rc.d/gdm stop;
+            kill -9 `pidof gdm`;
+            /etc/rc.d/dbus stop;
+            #/etc/rc.d/hal stop;
+            /etc/rc.d/acpid stop;
+            /etc/rc.d/cron stop;
+            #/etc/rc.d/rsyslog stop;
+            /etc/rc.d/udev stop;
+            modp -vr "vboxnetadp vboxnetflt vboxdrv arc4 ecb";
+            echo "Extra programs stopped";;
+        *)
+            echo "Extra programs switch";;
+    esac
+}
+
+function dell()
+{
+    case "$1" in
+        "start")
+            modp -v "dell_laptop wmi dcdbas rfkill";
+            echo "DELL extras are ON";;
+        "stop")
+            modp -vr "dell_laptop wmi dcdbas rfkill";
+            echo "DELL extras are OFF";;
+        *)
+            echo "DELL extras switch";;
+    esac
+}
+
+function rtc()
+{
+    case "$1" in
+        "start")
+            modp -v "rtc_lib rtc_core rtc_cmos";
+            echo "RTC is ON";;
+        "stop")
+            modp -vr "rtc_lib rtc_core rtc_cmos";
+            echo "RTC is OFF";;
+        *)
+            echo "RTC switch";;
+    esac
+}
+
+function run()
+{
+    $1 $2
+}
+
+case "$1" in
+    "stop")
+        sound start;
+        network start;
+        wifi start;
+        lan start;
+        cdrom start;
+        usb start;
+        bluetooth start;
+        sd start;
+        firewire start;
+        mouse start;
+        security start;
+        sensors start;
+        rtc start;
+        dell start;
+        echo 500 > /proc/sys/vm/dirty_writeback_centisecs;
+        for directory in `ls /sys/class/scsi_host/`; do
+            echo max_performance > /sys/class/scsi_host/$directory/link_power_management_policy
+        done
+        ;;
+    "start")
+        sound stop;
+        network stop;
+        wifi stop;
+        lan stop;
+        cdrom stop;
+        bluetooth stop;
+        usb stop;
+        sd stop;
+        firewire stop;
+        mouse stop;
+        security stop;
+        filesystems stop;
+        sensors stop;
+        rtc stop;
+        dell stop;
+        echo 1500 > /proc/sys/vm/dirty_writeback_centisecs;
+        for directory in `ls /sys/class/scsi_host/`; do
+            echo min_power > /sys/class/scsi_host/$directory/link_power_management_policy
+        done
+        cpufreq-set -c 0 -d 800000 -u 800000 -g powersave
+        cpufreq-set -c 1 -d 800000 -u 800000 -g powersave
+        ;;
+    "hibernate")
+        pm-hibernate;;
+    "suspend")
+        pm-suspend;;
+    "r")
+        run $2 $3;;
+    *)
+        echo "type $0 -h for help";;
+esac
+
+exit 0;

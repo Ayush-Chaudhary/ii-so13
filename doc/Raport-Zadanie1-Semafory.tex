@@ -1,0 +1,73 @@
+% 2014
+% Maciej Szeptuch
+% IIUWr
+
+\documentclass[12pt,leqno]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage{polski}
+\usepackage{a4wide}
+\usepackage[cm]{fullpage}
+
+\usepackage{graphicx}
+\usepackage{epstopdf}
+\usepackage{amsmath,amssymb}
+\usepackage{bm}
+\usepackage{amsthm}
+
+%% Kropka po numerze paragrafu, podparagrafu, itp.
+\makeatletter
+    \renewcommand\@seccntformat[1]{\csname the#1\endcsname.\quad}
+    \renewcommand\numberline[1]{#1.\hskip0.7em}
+\makeatother
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\title{\LARGE \textbf{{Systemy Operacyjne}}\\
+      {\Large Pracownia -- Zadanie 1 -- Semafory}\\
+}
+\author{Maciej Szeptuch}
+\date{Wrocław, \today}
+
+\begin{document}
+\thispagestyle{empty}
+\maketitle
+
+Pierwsze, obowiązkowe zadanie na pracownie z systemów operacyjnych było związane
+z semaforami i ich użyciem np.\ do rozwiązania pewnego problemu synchronizacyjnego.
+Jako że to zadanie nie było specjalnie skomplikowane, ja postanowiłem spróbować
+swoich sił z implementacją również samych semaforów. Istnieje wiele różnych podejść
+do tego problemu, ja postanowiłem wykorzystać operacje atomową porównaj-i-zamień
+(\textbf{Compare-and-swap, CAS}), poprzez dostępną w kompilatorze gcc funkcje
+wbudowaną \textit{\_\_sync\_bool\_compare\_and\_swap}. Korzystając z tej operacji
+implementacja semaforów jest dosyć oczywista, bardzo krótki i zwięzły kod źródłowy
+(\textit{semaphore\_spin.h}) został załączony do tego dokumentu w folderze
+\textit{semaphore}, wraz z przykładami użycia oraz rozwiązaniem problemu
+producenta-konsumenta. \\
+Ta bardzo prosta implementacja ma jedną wadę, działa na zasadzie aktywnego oczekiwania
+tzw.\ wirująca blokada(\textbf{spinlock}), mianowicie oczekiwanie na zwolnienie
+blokady polega na ciągłym badaniu jej stanu. W związku z tym zaimplementowałem również
+rozszerzenie tych semaforów o listę oczekujących procesów, której działanie polega
+na tym, że gdy proces/wątek wyrazi chęć dostępu do zablokowanego zasobu zostanie
+on uśpiony, dołączony do listy i w momencie, w którym zasób zostanie odblokowany
+pierwszy proces z listy dostaje sygnał obudzenia i tak aż skończą się żądania.
+W celu zapewnienia spójności listy pomiędzy procesami/wątkami również należy
+wykorzystać pewne sposoby synchronizacji -- tylko jeden wątek może mieć w danym
+momencie dostęp do listy. Aby to zapewnić została użyta wcześniejsza implementacja
+semaforów, operacje na liście są bardzo szybkie w związku z czym nie jest dla nas
+problemem aktywne oczekiwanie. Implementacja jest dostępna w postaci pliku
+\textit{semaphore\_list.h} w załączonym katalogu \textit{semaphore} z przykładami
+tak jak poprzednia. \\
+\\
+Aby uruchomić załączone przykłady należy je najpierw skompilować. W tym celu
+wystarczy w katalogu semaphore wywołać polecenie \textit{make}. Po czym możemy
+uruchomić program \textit{simple}, które przyjmuje jako argumenty liczbę wątków dla testu
+zwykłych semaforów oraz liczbę wątków dla testu semaforów opartych na listach,
+po czym wykonuje on bardzo proste testy polegające na uruchomieniu podanej liczby wątków
+i kolejnym blokowaniu zasobu przez następne wątki. \\
+Dostępne są także dwa programy \textit{producer-consumer} oraz
+\textit{producer-consumer-sys} są to implementacje rozwiązania problemu
+producenta-konsumenta z wykorzystaniem odpowiednio mojej implementacji semaforów oraz
+systemowej. Za argumenty przyjmują one liczbę odpowiednio wątków producentów oraz
+konsumentów.
+\end{document}

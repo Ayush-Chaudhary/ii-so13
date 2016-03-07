@@ -1,0 +1,56 @@
+% 2014
+% Maciej Szeptuch
+% IIUWr
+
+\documentclass[12pt,leqno]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage{polski}
+\usepackage{a4wide}
+\usepackage[cm]{fullpage}
+
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{epstopdf}
+\usepackage{amsmath,amssymb}
+\usepackage{bm}
+\usepackage{amsthm}
+
+%% Kropka po numerze paragrafu, podparagrafu, itp.
+\makeatletter
+    \renewcommand\@seccntformat[1]{\csname the#1\endcsname.\quad}
+    \renewcommand\numberline[1]{#1.\hskip0.7em}
+\makeatother
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\title{\LARGE \textbf{{Systemy Operacyjne}}\\
+      {\Large Pracownia -- Zadanie 3 -- Skrypt powłoki -- Oszczędzanie energii}\\
+}
+\author{Maciej Szeptuch}
+\date{Wrocław, \today}
+
+\begin{document}
+\thispagestyle{empty}
+\maketitle
+
+Trzecim zadaniem jest skrypt \textit{pwrsaver} napisany w języku powłoki bash,
+służący w pewnym sensie do zarządzania oszczędzaniem energii. Napisałem go
+w celu maksymalizacji czasu działania na baterii mojego laptopa. Jego działanie
+sprowadza się do włączania i wyłączania odpowiednich rzadko używanych usług
+systemowych, lub w tym momencie zwyczajnie niepotrzebnych. Oraz takim samym
+działaniem w stosunku do załadowanych modułów w jądrze Linux. \\
+Skrypt pozwala m.in.\ na włączanie/wyłącznie podsystemu dźwięku, obsługi sieci
+(bezprzewodowej, przewodowej, GSM), bluetooth, czytnika kart SD, całego
+podsystemu USB, czytnika kart inteligentnych i wielu innych. Swego czasu z jego
+pomocą można było przedłużyć czas działania na baterii o 1.5-2 godziny. Co prawda
+niewiele można robić gdy chce się osiągnąć taki zysk (system działał tylko w konsoli)
+ale w zupełności wystarczało to np.\ do pisania kodu, czytania dokumentów tekstowych,
+dokumentacji. \\
+\\
+Jego użycie sprowadza się do wywołania z odpowiednimi argumentami, które wyświetlają
+się w momencie gdy spróbujemy go uruchomić bez żadnych. Np.\ \textit{./pwrsaver r sound stop}
+spowoduje wyłączenie podsystemu dźwięku i wszystkiego co z nim związane. \\
+Z ważnych informacji: skrypt do działania wymaga uprawnień administratora, które można
+uzyskać korzystając np.\ z \textit{sudo} czy też \textit{su}.
+\end{document}

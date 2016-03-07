@@ -1,0 +1,56 @@
+% 2014
+% Maciej Szeptuch
+% IIUWr
+
+\documentclass[12pt,leqno]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage{polski}
+\usepackage{a4wide}
+\usepackage[cm]{fullpage}
+
+\usepackage{hyperref}
+\usepackage{graphicx}
+\usepackage{epstopdf}
+\usepackage{amsmath,amssymb}
+\usepackage{bm}
+\usepackage{amsthm}
+
+%% Kropka po numerze paragrafu, podparagrafu, itp.
+\makeatletter
+    \renewcommand\@seccntformat[1]{\csname the#1\endcsname.\quad}
+    \renewcommand\numberline[1]{#1.\hskip0.7em}
+\makeatother
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+\title{\LARGE \textbf{{Systemy Operacyjne}}\\
+      {\Large Pracownia -- Zadanie 2 -- Moduł do jądra Linuksa}\\
+}
+\author{Maciej Szeptuch}
+\date{Wrocław, \today}
+
+\begin{document}
+\thispagestyle{empty}
+\maketitle
+
+Jako drugie zadanie postanowiłem spróbować swoich sił z napisaniem prostego modułu
+do jądra systemu Linux. Zaimplementowałem proste wirtualne urządzenie znakowe,
+które udostępnia nieskończony ciąg znaków w postaci "Hello World!" występujących
+jeden za drugim. Zadanie również okazało się niezbyt skomplikowane. Korzystając
+z ogólnodostępnych zasobów np.\ \url{http://www.tldp.org/LDP/lkmpg/2.6/html/lkmpg.html}
+można krok po kroku nauczyć się pisać takie moduły w przeciągu kilkudziesięciu minut. \\
+\\
+Moduł jest dostępny w katalogu \textit{module}. Aby go użyć należy go najpierw skompilować.
+W tym celu wystarczy przejść do wspomnianego folderu i wydać polecenie \textit{make} po
+czym w bieżącym katalogu powinien pojawić się moduł \textit{hello.ko}. Załadować go można
+dowolnym dostępnym poleceniem np.\ \textit{insmod hello.ko}. Po załadowaniu w katalogu
+\textit{/dev} powinno pojawić się urządzenie o jakże skomplikowanej nazwie \textbf{hello}.
+W momencie w którym będziemy próbowali z niego czytać np.\ używając programu \textit{cat}
+na ekranie powinny się pojawiać "Hello World!". Zapis do urządzenia jest niedostępny
+w związku z czym w momencie próby zapisu czegokolwiek powinien pojawiać się błąd. \\
+Po skończonym testowaniu można usunąć moduł z jądra korzystając np.\ z polecenia
+\textit{rmmod}. \\
+Z ciekawych informacji, w momencie ładowania i usuwania modułu z jądra w dziennikach
+systemowych powinny pojawiać się informacje z samego modułu w postaci "Hello World! (un)loaded".
+\end{document}
